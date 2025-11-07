@@ -289,10 +289,8 @@ import joblib
 
 joblib.dump(rf_model, "rf_model.pkl")  # Save trained Random Forest model
 
-!pip install hsml
 
 import hsml
-import hopsworks
 
 project = hopsworks.login()
 mr = project.get_model_registry()
