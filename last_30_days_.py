@@ -101,7 +101,6 @@ if __name__ == "__main__":
     end = datetime.now()
     collect_hourly_data(start, end)
 
-!pip install hopsworks
 
 !pip install "hopsworks==4.2.*"
 
