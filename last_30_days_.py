@@ -311,31 +311,3 @@ model = mr.python.create_model(
 
 model.save("rf_model.pkl")
 
-
-import pandas as pd
-from datetime import datetime, timedelta
-
-# Create timestamps for next 72 hours
-start_time = datetime.now()
-timestamps = [start_time + timedelta(hours=i) for i in range(72)]
-
-# Create DataFrame
-prediction_df = pd.DataFrame({
-    "timestamp": timestamps,
-    "predicted_aqi": forecast
-})
-
-import hopsworks
-
-project = hopsworks.login()
-fs = project.get_feature_store()
-
-fg = fs.get_or_create_feature_group(
-    name="aqi_predictions",
-    version=1,
-    description="Hourly AQI predictions for next 3 days",
-    primary_key=["timestamp"],
-    online_enabled=False
-)
-
-fg.insert(prediction_df)
