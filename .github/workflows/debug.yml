@@ -1,0 +1,21 @@
+name: Debug Workflow
+
+on: [push]
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Find and Verify File
+      run: |
+        echo "=== Searching for Python file ==="
+        find . -name "last_30_days.py" -type f
+        echo "=== Repository structure ==="
+        tree || ls -la
+        echo "=== Checking current path ==="
+        pwd
+        echo "=== File exists? ==="
+        [ -f "./last_30_days.py" ] && echo "FILE EXISTS IN ROOT" || echo "FILE NOT IN ROOT"
+        [ -f "karachi-aqi-pipeline/last_30_days.py" ] && echo "FILE EXISTS IN SUBDIR" || echo "FILE NOT IN SUBDIR"
