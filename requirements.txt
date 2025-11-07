@@ -1,4 +1,7 @@
 hopsworks
+hopsworks==4.1.2
+hopsworks[python]
+hsml
 pandas
 scikit-learn
 joblib
