@@ -102,9 +102,7 @@ if __name__ == "__main__":
     collect_hourly_data(start, end)
 
 
-!pip install "hopsworks==4.2.*"
-
-!pip install "hopsworks[python]"
+import hopsworks
 
 import os
 os.environ["HOPSWORKS_API_KEY"] = "xcMYxvY6MzDaggfx.rCAA1m64gD8dwYmdpSRVgGJJXQj3lRzFoI8oD8MISD6tK85gjv22TtfO8eeozooQ"
