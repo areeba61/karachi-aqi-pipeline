@@ -79,7 +79,7 @@ def save_records(records):
         df = pd.concat([old, df], ignore_index=True)
         df.drop_duplicates(subset=["timestamp"], inplace=True)
     df.to_csv(CSV_PATH, index=False)
-    print(f"✅ Saved {len(df)} total records to {CSV_PATH}")
+    print(f" Saved {len(df)} total records to {CSV_PATH}")
 
 # ========== MAIN FUNCTION ==========
 
@@ -87,7 +87,7 @@ def collect_hourly_data(start_date, end_date):
     current = start_date
     records = []
     while current < end_date:
-        print(f"📦 Fetching {current}")
+        print(f" Fetching {current}")
         record = build_record(current)
         if record:
             records.append(record)
@@ -125,7 +125,7 @@ fg = fs.get_or_create_feature_group(
 )
 
 fg.insert(df)
-print("✅ Data inserted into Hopsworks Feature Store")
+print("Data inserted into Hopsworks Feature Store")
 
 import hopsworks
 
@@ -143,10 +143,10 @@ fg = fs.get_feature_group(name="karachi_weather_hourly", version=1)
 # ✅ Read the data directly from Hopsworks
 df = fg.select_all().read()
 
-# ✅ Optional: sort by timestamp if needed
+# Optional: sort by timestamp if needed
 df = df.sort_values("timestamp").reset_index(drop=True)
 
-print("✅ Data fetched from Hopsworks Feature Store")
+print("Data fetched from Hopsworks Feature Store")
 
 # 📥 Fetch data from Hopsworks
 fg = fs.get_feature_group("karachi_weather_hourly", version=1)
@@ -258,7 +258,7 @@ rf_rmse = np.sqrt(mean_squared_error(y_test, rf_pred))
 rf_r2 = r2_score(y_test, rf_pred)
 rf_acc = max(0, 1 - (rf_mae / np.mean(y_test)))
 
-print("🌲 Random Forest")
+print("Random Forest")
 print("MAE:", round(rf_mae, 2))
 print("RMSE:", round(rf_rmse, 2))
 print("R²:", round(rf_r2, 4))
@@ -275,9 +275,9 @@ day1 = forecast[:24]
 day2 = forecast[24:48]
 day3 = forecast[48:]
 
-print("📅 Day 1 Forecast:", day1)
-print("📅 Day 2 Forecast:", day2)
-print("📅 Day 3 Forecast:", day3)
+print("Day 1 Forecast:", day1)
+print("Day 2 Forecast:", day2)
+print("Day 3 Forecast:", day3)
 
 import hopsworks
 
@@ -291,6 +291,7 @@ joblib.dump(rf_model, "rf_model.pkl")  # Save trained Random Forest model
 
 
 import hsml
+import joblib
 
 project = hopsworks.login()
 mr = project.get_model_registry()
@@ -309,5 +310,16 @@ model = mr.python.create_model(
     description="Random Forest model for 3-day AQI hourly forecast"
 )
 
-model.save("rf_model.pkl")
+try:
+    latest_model = mr.get_model("karachi_aqi_forecaster", version=mr.get_latest_version("karachi_aqi_forecaster"))
+    previous_best = latest_model.metrics.get("accuracy", 0)
+except:
+    previous_best = 0  # First time or fetch failed
 
+# Save only if accuracy improves
+if rf_acc > previous_best:
+    joblib.dump(rf_model, "rf_model.pkl", compress=3)
+    model.save("rf_model.pkl")
+    print(f"New model saved with improved accuracy: {round(rf_acc * 100, 2)}%")
+else:
+    print(f" Model not saved. Accuracy {round(rf_acc * 100, 2)}% did not improve over {round(previous_best * 100, 2)}%")
