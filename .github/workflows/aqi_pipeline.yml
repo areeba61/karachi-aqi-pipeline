@@ -8,7 +8,6 @@ on:
 jobs:
   run_pipeline:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -22,7 +21,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Debug: Show current directory and files
+      - name: Debug:Show current directory and files
         run: |
           pwd
           ls -la
@@ -33,4 +32,3 @@ jobs:
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
         run: |
           python ./last_30_days.py
-
