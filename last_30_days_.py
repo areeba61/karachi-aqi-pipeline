@@ -215,7 +215,7 @@ print(df_capped[numeric_cols].describe())
 
 def prepare_multioutput_forecast_data(df, lag_hours=72, forecast_hours=72):
     if len(df) < lag_hours + forecast_hours:
-        print(f"❌ Not enough rows. Need at least {lag_hours + forecast_hours}, got {len(df)}.")
+        print(f" Not enough rows. Need at least {lag_hours + forecast_hours}, got {len(df)}.")
         return None, None
 
     # Lag features: past 72 hours
@@ -299,27 +299,31 @@ mr = project.get_model_registry()
 from hsml.schema import Schema
 from hsml.model import Model
 
-input_example = X.iloc[0]
-model_schema = Schema(X)
-
-model = mr.python.create_model(
-    name="karachi_aqi_forecaster",
-    metrics={"accuracy": 0.86},
-    model_schema=model_schema,
-    input_example=input_example,
-    description="Random Forest model for 3-day AQI hourly forecast"
-)
-
 try:
     latest_model = mr.get_model("karachi_aqi_forecaster", version=mr.get_latest_version("karachi_aqi_forecaster"))
     previous_best = latest_model.metrics.get("accuracy", 0)
 except:
     previous_best = 0  # First time or fetch failed
 
-# Save only if accuracy improves
-if rf_acc > previous_best:
+# 🔧 Float comparison buffer
+threshold = 0.0001
+
+# Save only if accuracy improves meaningfully
+if rf_acc > previous_best + threshold:
     joblib.dump(rf_model, "rf_model.pkl", compress=3)
+
+    input_example = X.iloc[0]
+    model_schema = Schema(X)
+
+    model = mr.python.create_model(
+        name="karachi_aqi_forecaster",
+        metrics={"accuracy": round(rf_acc, 4)},
+        model_schema=model_schema,
+        input_example=input_example,
+        description="Random Forest model for 3-day AQI hourly forecast"
+    )
+
     model.save("rf_model.pkl")
-    print(f"New model saved with improved accuracy: {round(rf_acc * 100, 2)}%")
+    print(f" New model saved with improved accuracy: {round(rf_acc * 100, 2)}%")
 else:
     print(f" Model not saved. Accuracy {round(rf_acc * 100, 2)}% did not improve over {round(previous_best * 100, 2)}%")
