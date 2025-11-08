@@ -34,7 +34,7 @@ def fetch_weather_at(timestamp):
     if r.status_code == 200 and r.json().get("list"):
         return r.json()["list"][0]
     else:
-        print(f"⚠ Weather API error {r.status_code} at {timestamp}")
+        print(f" Weather API error {r.status_code} at {timestamp}")
         return None
 
 def fetch_pollution_at(timestamp):
@@ -111,7 +111,7 @@ import hopsworks
 import pandas as pd
 
 df = pd.read_csv("karachi_weather_hourly.csv")
-df["timestamp"] = pd.to_datetime(df["timestamp"])  # ✅ Fix here
+df["timestamp"] = pd.to_datetime(df["timestamp"])  #  Fix here
 
 project = hopsworks.login()
 fs = project.get_feature_store()
@@ -130,17 +130,17 @@ print("Data inserted into Hopsworks Feature Store")
 import hopsworks
 
 project = hopsworks.login()
-fs = project.get_feature_store()  # ✅ This defines 'fs'
+fs = project.get_feature_store()  #  This defines 'fs'
 
 import hopsworks
 
 project = hopsworks.login()
 fs = project.get_feature_store()
 
-# ✅ Get the feature group
+#  Get the feature group
 fg = fs.get_feature_group(name="karachi_weather_hourly", version=1)
 
-# ✅ Read the data directly from Hopsworks
+#  Read the data directly from Hopsworks
 df = fg.select_all().read()
 
 # Optional: sort by timestamp if needed
@@ -148,7 +148,7 @@ df = df.sort_values("timestamp").reset_index(drop=True)
 
 print("Data fetched from Hopsworks Feature Store")
 
-# 📥 Fetch data from Hopsworks
+#  Fetch data from Hopsworks
 fg = fs.get_feature_group("karachi_weather_hourly", version=1)
 df = fg.read()
 
@@ -287,28 +287,16 @@ mr = project.get_model_registry()
 
 import joblib
 
-joblib.dump(rf_model, "rf_model.pkl")  # Save trained Random Forest model
-
-
-import hsml
-import joblib
-
-project = hopsworks.login()
-mr = project.get_model_registry()
-
-from hsml.schema import Schema
-from hsml.model import Model
-
 try:
     latest_model = mr.get_model("karachi_aqi_forecaster", version=mr.get_latest_version("karachi_aqi_forecaster"))
     previous_best = latest_model.metrics.get("accuracy", 0)
-except:
-    previous_best = 0  # First time or fetch failed
+except Exception as e:
+    print(" Could not fetch previous model:", e)
+    previous_best = 0
 
-# 🔧 Float comparison buffer
 threshold = 0.0001
+print(f" Comparing accuracies: current = {round(rf_acc, 4)}, previous = {round(previous_best, 4)}")
 
-# Save only if accuracy improves meaningfully
 if rf_acc > previous_best + threshold:
     joblib.dump(rf_model, "rf_model.pkl", compress=3)
 
