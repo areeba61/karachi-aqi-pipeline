@@ -2,8 +2,8 @@ name: AQI Forecast Automation
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
-  workflow_dispatch:     # Manual trigger
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:     # Manual trigger option
 
 jobs:
   run_pipeline:
@@ -23,14 +23,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug:Show current directory and files
-        run: |
-          pwd
-          ls -la
-
-      - name: Run AQI pipeline
+      - name: Run AQI pipeline (last 24h)
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
         run: |
-          python ./last_30_days_.py
+          python last_24_hours.py
