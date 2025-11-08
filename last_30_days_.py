@@ -286,13 +286,16 @@ fs = project.get_feature_store()
 mr = project.get_model_registry()
 
 import joblib
+from hsml.schema import Schema
+
 
 try:
-    latest_model = mr.get_model("karachi_aqi_forecaster", version=mr.get_latest_version("karachi_aqi_forecaster"))
+    latest_model = mr.get_model("karachi_aqi_forecaster")  # fetches latest version directly
     previous_best = latest_model.metrics.get("accuracy", 0)
 except Exception as e:
     print(" Could not fetch previous model:", e)
     previous_best = 0
+
 
 threshold = 0.0001
 print(f" Comparing accuracies: current = {round(rf_acc, 4)}, previous = {round(previous_best, 4)}")
