@@ -287,34 +287,27 @@ mr = project.get_model_registry()
 
 import joblib
 from hsml.schema import Schema
+from hsml.model import Model
+import hopsworks
 
+project = hopsworks.login()
+mr = project.get_model_registry()
 
-try:
-    latest_model = mr.get_model("karachi_aqi_forecaster")  # fetches latest version directly
-    previous_best = latest_model.metrics.get("accuracy", 0)
-except Exception as e:
-    print(" Could not fetch previous model:", e)
-    previous_best = 0
+# 🔧 Save model locally
+joblib.dump(rf_model, "rf_model.pkl", compress=3)
 
+# 🔧 Define schema and input example
+input_example = X.iloc[0]
+model_schema = Schema(X)
 
-threshold = 0.0001
-print(f" Comparing accuracies: current = {round(rf_acc, 4)}, previous = {round(previous_best, 4)}")
+#  Create and save model in Hopsworks
+model = mr.python.create_model(
+    name="karachi_aqi_forecaster",
+    metrics={"accuracy": round(rf_acc, 4)},
+    model_schema=model_schema,
+    input_example=input_example,
+    description="Random Forest model for 3-day AQI hourly forecast"
+)
 
-if rf_acc > previous_best + threshold:
-    joblib.dump(rf_model, "rf_model.pkl", compress=3)
-
-    input_example = X.iloc[0]
-    model_schema = Schema(X)
-
-    model = mr.python.create_model(
-        name="karachi_aqi_forecaster",
-        metrics={"accuracy": round(rf_acc, 4)},
-        model_schema=model_schema,
-        input_example=input_example,
-        description="Random Forest model for 3-day AQI hourly forecast"
-    )
-
-    model.save("rf_model.pkl")
-    print(f" New model saved with improved accuracy: {round(rf_acc * 100, 2)}%")
-else:
-    print(f" Model not saved. Accuracy {round(rf_acc * 100, 2)}% did not improve over {round(previous_best * 100, 2)}%")
+model.save("rf_model.pkl")
+print(f" Model saved to Hopsworks with accuracy: {round(rf_acc * 100, 2)}%")
